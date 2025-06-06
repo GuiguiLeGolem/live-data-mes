@@ -1,0 +1,108 @@
+.tableau-enter-from {
+  opacity: 0;
+  transform: translateY(100px);
+}
+
+.tableau-leave-to {
+  opacity: 0;
+  transform: translateY(-100px);
+}
+
+.tableau-enter-active,
+.tableau-leave-active {
+  transition: 1s;
+}
+
+.divTableau {
+  overflow-x: auto;
+  padding: 1rem;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+thead {
+  background-color: #333;
+  color: #fff;
+}
+
+th, td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+}
+
+th{
+  font-weight: bold;
+  color: white;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+th[aria-sort="ascending"],
+th[aria-sort="descending"] {
+  background-color: #5f5e5e;
+  color: white;
+  position: relative;
+}
+
+th[aria-sort="ascending"]::after {
+  content: '▲';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+th[aria-sort="descending"]::after {
+  content: '▼';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+td{
+  color: #333;
+}
+
+tbody tr {
+  transition: background-color 0.3s ease;
+}
+
+thead th {
+  transition: background-color 0.3s ease;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #e2e2e2;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #b6b6b6;
+}
+
+thead th:hover{
+  background-color: #5f5e5e;
+  cursor: pointer;
+}
+
+tbody tr:hover {
+  background-color: white;
+  cursor: pointer;
+}

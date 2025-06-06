@@ -1,0 +1,29 @@
+.loader-wrapper {
+  position: fixed; /* s’affiche par-dessus tout */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: white; /* optionnel, si tu veux un fond */
+  z-index: 1000; /* pour passer au-dessus du reste */
+}
+
+.loader-text {
+  font-size: 40px;
+  color: #555;
+}
+
+.loader-leave-to {
+  opacity: 0;
+}
+
+.loader-leave-active {
+  transition: 1s;
+  position: absolute;
+  width: 100%;
+}
