@@ -10,11 +10,9 @@
       <thead>
         <tr>
           <th :aria-sort="getAriaSort('ligne')" scope="col" @click="() => trierPar('ligne')">Ligne</th>
-          <th :aria-sort="getAriaSort('poste')" scope="col" @click="() => trierPar('poste')">Poste</th>
           <th :aria-sort="getAriaSort('pilote1')" scope="col" @click="() => trierPar('pilote1')">Pilote 1</th>
           <th :aria-sort="getAriaSort('pilote2')" scope="col" @click="() => trierPar('pilote2')">Pilote 2</th>
           <th :aria-sort="getAriaSort('debutPoste')" scope="col" @click="() => trierPar('debutPoste')">Début du poste</th>
-          <th :aria-sort="getAriaSort('id')" scope="col" @click="() => trierPar('id')">ID</th>
           <th>Temps d'activité</th>
           <th>Quantité</th>
           <th>Numéro OF</th>
@@ -23,14 +21,12 @@
       <tbody>
         <tr v-for="(value, index) in data" :key="index">
           <td>{{ value.ligne }}</td>
-          <td>{{ value.poste }}</td>
           <td>{{ value.pilote1 }}</td>
           <td>{{ value.pilote2 }}</td>
           <td>{{ formatDate(value.debutPoste) }}</td>
-          <td>{{ value.id }}</td>
           <td>{{ value.tempsProd }}</td>
           <td>{{ value.quantite }}</td>
-          <td>{{ value.numeroOf }}</td>
+          <td>{{ value.numeroOF }}</td>
         </tr>
       </tbody>
     </table>
@@ -45,6 +41,7 @@ import 'dayjs/locale/fr'
 dayjs.locale("fr")
 
 const data = ref([])
+const lignes = ref([])
 const isLoading = ref(true)
 const sortKey = ref(null)
 const sortAsc = ref(true)
@@ -58,13 +55,17 @@ onMounted(() => {
   fetchAllData()
 
   setInterval(() => {
+    refreshDynamicTempsProdLigne()
+  }, 1000) //ms
+
+  setInterval(() => {
     refreshDynamicData()
-  }, 1000) //500ms
+  }, 10000) //ms
 })
 
 async function fetchAllData() {
-  for (let i = 1; i < 7; i++) {
-    const [posteData, tempsProd, quantite, numeroOf] = await Promise.all([
+  for (let i = 1; i <= 6; i++) {
+    const [posteData, tempsProd, quantite, numeroOF] = await Promise.all([
       fetch(`/api/WS_MES_PILOTE/Infos/PosteEnCours?ligne=${i}`).then(res => res.json()),
       fetch(`/api/WS_MES_PILOTE/Infos/tempsProdLigne?ligne=${i}`).then(res => res.text()),
       fetch(`/api/WS_MES_PILOTE/Infos/quantiteLigne?ligne=${i}`).then(res => res.text()),
@@ -72,30 +73,65 @@ async function fetchAllData() {
     ])
 
     if (posteData.length > 0) {
+      lignes.value.push(...posteData[0].ligne)
+
       data.value.push({
         ...posteData[0],
         tempsProd,
         quantite,
-        numeroOf
+        numeroOF
       })
     }
   }
+
+  console.log(lignes.value)
 
   isLoading.value = false
 }
 
 async function refreshDynamicData() {
+  const lignesActives = []
+
+  for (let i = 1; i <= 6; i++) {
+    const posteData = await fetch(`/api/WS_MES_PILOTE/Infos/PosteEnCours?ligne=${i}`).then(res => res.json())
+
+    if (posteData.length > 0) {
+      const [quantite, numeroOF] = await Promise.all([
+        fetch(`/api/WS_MES_PILOTE/Infos/quantiteLigne?ligne=${i}`).then(res => res.text()),
+        fetch(`/api/WS_MES_PILOTE/Infos/numeroOfEnCoursLigne?ligne=${i}`).then(res => res.text())
+      ])
+
+      const index = data.value.findIndex(d => d.ligne === posteData[0].ligne)
+
+      const newEntry = {
+        ...posteData[0],
+        quantite,
+        numeroOf: numeroOF
+      }
+
+      if (index !== -1) {
+        // update
+        data.value[index] = { ...data.value[index], ...newEntry }
+      } else {
+        // insert
+        data.value.push(newEntry)
+      }
+
+      lignesActives.push(posteData[0].ligne)
+    }
+  }
+
+  // Supprimer les lignes qui ne sont plus actives
+  // data.value = data.value.filter(d => lignesActives.includes(d.ligne))
+  // lignes.value = lignesActives
+}
+
+async function refreshDynamicTempsProdLigne() {
   for (let i = 0; i < data.value.length; i++) {
     const ligne = data.value[i].ligne
-    const [tempsProd, quantite, numeroOf] = await Promise.all([
-      fetch(`/api/WS_MES_PILOTE/Infos/tempsProdLigne?ligne=${ligne}`).then(res => res.text()),
-      fetch(`/api/WS_MES_PILOTE/Infos/quantiteLigne?ligne=${ligne}`).then(res => res.text()),
-      fetch(`/api/WS_MES_PILOTE/Infos/numeroOfEnCoursLigne?ligne=${ligne}`).then(res => res.text())
-    ])
+    const tempsProd = await fetch(`/api/WS_MES_PILOTE/Infos/tempsProdLigne?ligne=${ligne}`).then(res => res.text())
 
     data.value[i].tempsProd = tempsProd
-    data.value[i].quantite = quantite
-    data.value[i].numeroOf = numeroOf
   }
 }
 
